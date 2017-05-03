@@ -11,14 +11,18 @@ object PageRank {
     val conf = new SparkConf().setMaster("local").setAppName("POOP")
     val sc = new SparkContext(conf)
 
-    val vertex_data: RDD[String] = sc.textFile("data/shorter_vertices.txt")
+    sc.hadoopConfiguration.set("fs.s3n.awsAccessKeyId", args(0))
+    sc.hadoopConfiguration.set("fs.s3n.awsSecretAccessKey", args(1))
+
+//    val vertex_data: RDD[String] = sc.textFile("data/shorter_vertices.txt")
+    val vertex_data: RDD[String] = sc.textFile("s3n://dcomp-pagerank/shorter_vertices.txt")
     val pages: RDD[WebPage] = vertex_data.map(_.split(' ')).
       map(line => WebPage(line(0).trim, line(1).trim))
     val vertices: RDD[(VertexId, String)] = pages.map(a => (a.id.toLong, a.url))
 
     vertices.take(10).foreach(println)
 
-    val edge_data: RDD[String] = sc.textFile("data/shorter_edges.txt")
+    val edge_data: RDD[String] = sc.textFile("s3n://dcomp-pagerank/shorter_edges.txt")
     val edges: RDD[Edge[Double]] = edge_data.map(_.split(' ')).map(l => Edge(l(0).toLong, l(1).toLong, 1.0))
 
     val graph = Graph(vertices, edges, "")
