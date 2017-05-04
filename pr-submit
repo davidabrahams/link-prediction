@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-cluster_id='XXXXXXXXXX'
+cluster_id='j-9X4NHLP7SSYN'
 
 app_name="PageRankCalculator"
 
@@ -13,7 +13,7 @@ s3_jar_dir="s3://dcomp-pagerank/"
 s3_jar_path="${s3_jar_dir}${jar_name}"
 ###################################################
 
-sbt assembly
+sbt package
 
 aws s3 cp ${jar_path} ${s3_jar_dir}
 
