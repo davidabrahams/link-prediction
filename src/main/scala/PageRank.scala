@@ -8,7 +8,7 @@ object PageRank {
 
   def main(args: Array[String]): Unit = {
 
-    val conf = new SparkConf().setMaster("local").setAppName("POOP")
+    val conf = new SparkConf().setAppName("POOP")
     val sc = new SparkContext(conf)
 
     sc.hadoopConfiguration.set("fs.s3n.awsAccessKeyId", args(0))
@@ -33,6 +33,7 @@ object PageRank {
     }.vertices.top(10) {
       Ordering.by((entry: (VertexId, (Double, String))) => entry._2._1)
     }.foreach(t => println(t._2._2 + ": " + t._2._1))
+    sc.stop()
 
   }
 }
