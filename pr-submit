@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -euxo pipefail
+
+cluster_id='XXXXXXXXXX'
+
+app_name="PageRankCalculator"
+
+main_class="PageRank"
+jar_name="link-prediction_2.11-1.0.jar"
+jar_path="target/scala-2.11/${jar_name}"
+s3_jar_dir="s3://dcomp-pagerank/"
+s3_jar_path="${s3_jar_dir}${jar_name}"
+###################################################
+
+sbt assembly
+
+aws s3 cp ${jar_path} ${s3_jar_dir}
+
+aws emr add-steps --cluster-id ${cluster_id} --steps Type=spark,Name=${app_name},Args=[--deploy-mode,cluster,--master,yarn-cluster,--class,${main_class},${s3_jar_path}],ActionOnFailure=CONTINUE
