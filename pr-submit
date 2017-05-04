@@ -1,6 +1,4 @@
-#!/usr/bin/env bash
-
-set -euxo pipefail
+#!/bin/bash
 
 cluster_id='j-9X4NHLP7SSYN'
 
