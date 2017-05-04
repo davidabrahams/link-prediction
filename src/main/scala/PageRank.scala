@@ -8,7 +8,7 @@ object PageRank {
 
   def main(args: Array[String]): Unit = {
 
-    val conf = new SparkConf().setAppName("POOP")
+    val conf = new SparkConf().setAppName("PageRankCalculator")
     val sc = new SparkContext(conf)
 
     sc.hadoopConfiguration.set("fs.s3n.awsAccessKeyId", args(0))
@@ -27,8 +27,8 @@ object PageRank {
 
     val graph = Graph(vertices, edges, "")
 
-    val prBerkeley = graph.staticPageRank(5).cache
-    graph.outerJoinVertices(prBerkeley.vertices) {
+    val prGraph = graph.staticPageRank(5).cache
+    graph.outerJoinVertices(prGraph.vertices) {
       (v, title, r) => (r.getOrElse(0.0), title)
     }.vertices.top(10) {
       Ordering.by((entry: (VertexId, (Double, String))) => entry._2._1)
