@@ -63,16 +63,14 @@ object PageRank {
 
   def main(args: Array[String]): Unit = {
 
-    // TODO remove local
-//    val conf = new SparkConf().setAppName("PageRankCalculator")
-    val conf = new SparkConf().setMaster("local").setAppName("PageRankCalculator")
+//    val conf = new SparkConf().setAppName("PageRankCalculator") // TODO: This is for EMR
+    val conf = new SparkConf().setMaster("local").setAppName("PageRankCalculator") // TODO: This is for local
     val sc = new SparkContext(conf)
 
-    // TODO remove this
+    // TODO comment these two lines out when uploading to EMR
     sc.hadoopConfiguration.set("fs.s3n.awsAccessKeyId", args(0))
     sc.hadoopConfiguration.set("fs.s3n.awsSecretAccessKey", args(1))
 
-//    val vertex_data: RDD[String] = sc.textFile("data/shorter_vertices.txt")
     val vertex_data: RDD[String] = sc.textFile("s3n://dcomp-pagerank/shorter_vertices.txt")
     val vertices: RDD[(Long, String)] = vertex_data.map(_.split(' ')).
       map(line => (line(0).trim.toLong, line(1).trim))
@@ -98,16 +96,13 @@ object PageRank {
     }.map(t => t._2._1 + ": " + t._2._2))
     strings_to_save.saveAsTextFile("s3n://dcomp-pagerank/page_rank_output.txt")
 
-    // This prints the pageranks of pages using builtin algorithm
-
-//        val prGraph = graph.staticPageRank(10).cache
+//    // This prints the pageranks of pages using builtin algorithm. You can use this to compare our output to ours
+//    val prGraph = graph.staticPageRank(10).cache
 //    graph.outerJoinVertices(prGraph.vertices) {
 //      (v, title, r) => (r.getOrElse(0.0), title)
 //    }.vertices.top(10) {
 //      Ordering.by((entry: (VertexId, (Double, String))) => entry._2._1)
 //    }.foreach(t => println(t._2._2 + ": " + t._2._1))
-
-
 
     sc.stop()
 
