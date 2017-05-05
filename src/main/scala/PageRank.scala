@@ -22,7 +22,7 @@ object PageRank {
     var prevRankGraph: Graph[Double, Double] = null
 
     for (i <- 1 to 10) {
-      val rankUpdates : RDD[(Long, Double)] = rankGraph.aggregateMessages[Double] (
+      var rankUpdates : RDD[(Long, Double)] = rankGraph.aggregateMessages[Double] (
         // Send message to each triplet in graph containing pageRank * edgeWeight
         edgeTriplet => edgeTriplet.sendToDst(edgeTriplet.srcAttr * edgeTriplet.attr),
         // Merge message. Accumulate page ranks
@@ -33,10 +33,16 @@ object PageRank {
       prevRankGraph = rankGraph
 
       rankGraph = rankGraph.outerJoinVertices(rankUpdates) {
-        (id, oldRank, msgSumOpt) => .15 / graph.numVertices + (1.0 - resetProb) * msgSumOpt.getOrElse(0.0)
-      }.cache()
+        // Outer join combines the rankGraph (webpage and old rank) with the computed rankUpdates (webpage and new points) 
+        // Compute the new page rank (Random page landing) + (Page ranks from its neighbors)
+        (id, oldRank, msgSumOpt) => .15 / graph.numVertices + (1.0 - .15) * msgSumOpt.getOrElse(0.0)
+        // Now rankGraph contains (webpage, newPageRank)
+      }
 
-
+      rankGraph.edges.foreachPartition(x => {}) // also materializes rankGraph.vertices
+      logInfo(s"PageRank finished iteration $iteration.")
+      prevRankGraph.vertices.unpersist(false)
+      prevRankGraph.edges.unpersist(false)
     }
 
 
