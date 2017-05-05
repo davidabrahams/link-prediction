@@ -39,10 +39,9 @@ object PageRank {
         // Now rankGraph contains (webpage, newPageRank)
       }
 
-      rankGraph.edges.foreachPartition(x => {}) // also materializes rankGraph.vertices
+      // Clear edge messages?
+      rankGraph.edges.foreachPartition(x => {}) 
       logInfo(s"PageRank finished iteration $iteration.")
-      prevRankGraph.vertices.unpersist(false)
-      prevRankGraph.edges.unpersist(false)
     }
 
 
