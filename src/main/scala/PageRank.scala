@@ -12,20 +12,29 @@ object PageRank {
     // and each vertex is the initial PageRank
 
     // create a graph whose vertices contain initial page rank and edges contain initial weights (1/outDegree)
-    val outputGraph: Graph[Double, Double] = outDegreeGraph.
+    val rankGraph: Graph[Double, Double] = outDegreeGraph.
       // store edge weights
       mapTriplets(edgeTriplet => 1.0 / edgeTriplet.srcAttr).
       // store initial page rank
       mapVertices((id, _) => 1.0 / graph.numVertices)
 
+
+    var prevRankGraph: Graph[Double, Double] = null
+
     for (i <- 1 to 10) {
-      val rankUpdates : RDD[(Long, Double)] = outputGraph.aggregateMessages[Double] (
+      val rankUpdates : RDD[(Long, Double)] = rankGraph.aggregateMessages[Double] (
         // Send message to each triplet in graph containing pageRank * edgeWeight
         edgeTriplet => edgeTriplet.sendToDst(edgeTriplet.srcAttr * edgeTriplet.attr),
         // Merge message. Accumulate page ranks
         _ + _,
         // Which triplet fields to include
         TripletFields.Src)
+
+      prevRankGraph = rankGraph
+
+      rankGraph = rankGraph.outerJoinVertices(rankUpdates) {
+        (id, oldRank, msgSumOpt) => .15 / graph.numVertices + (1.0 - resetProb) * msgSumOpt.getOrElse(0.0)
+      }.cache()
 
 
     }
